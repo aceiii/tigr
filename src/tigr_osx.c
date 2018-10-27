@@ -78,6 +78,10 @@ NSUInteger applicationShouldTerminate(id self, SEL _sel, id sender)
 	return 0;
 }
 
+void windowKeyDown(id self, SEL _sel, id event)
+{
+}
+
 void windowWillClose(id self, SEL _sel, id notification)
 {
 	NSUInteger value = true;
@@ -257,8 +261,13 @@ Tigr *tigrWindow(int w, int h, const char *title, int flags)
 
 	scale = tigrEnforceScale(scale, flags);
 
+    Class tigrWindowClass = objc_allocateClassPair((Class)objc_getClass("NSWindow"), "TigrWindow", 0);
+    bool resultAddKeyDownMethod = class_addMethod(tigrWindowClass, sel_registerName("keyDown:"), (IMP)windowKeyDown, "v@:@");
+    assert(resultAddKeyDownMethod);
+    objc_registerClassPair(tigrWindowClass);
+
 	NSRect rect = {{0, 0}, {w * scale, h * scale}};
-	id windowAlloc = objc_msgSend_id((id)objc_getClass("NSWindow"), sel_registerName("alloc"));
+	id windowAlloc = objc_msgSend_id((id)objc_getClass("TigrWindow"), sel_registerName("alloc"));
 	id window = ((id (*)(id, SEL, NSRect, NSUInteger, NSUInteger, BOOL))objc_msgSend)(windowAlloc, sel_registerName("initWithContentRect:styleMask:backing:defer:"), rect, 15, 2, NO);
 	#ifndef ARC_AVAILABLE
 	objc_msgSend_void(window, sel_registerName("autorelease"));
